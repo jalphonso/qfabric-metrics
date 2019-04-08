@@ -1,0 +1,7 @@
+csv/
+*.pyc
+*.log
+*.xml
+*.tgz
+*.tar
+*.tar.gz
