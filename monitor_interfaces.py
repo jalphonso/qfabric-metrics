@@ -61,29 +61,29 @@ try:
       snmp_if_index = interface.getElementsByTagName('snmp-index')[0].firstChild.data
       stats = interface.getElementsByTagName('ethernet-mac-statistics')
       if(stats):
-          stat = stats[0]
-          ibytes = stat.getElementsByTagName('input-bytes')[0].firstChild.data
-          ipackets = stat.getElementsByTagName('input-packets')[0].firstChild.data
-          obytes = stat.getElementsByTagName('output-bytes')[0].firstChild.data
-          opackets = stat.getElementsByTagName('output-packets')[0].firstChild.data
+        stat = stats[0]
+        ibytes = stat.getElementsByTagName('input-bytes')[0].firstChild.data
+        ipackets = stat.getElementsByTagName('input-packets')[0].firstChild.data
+        obytes = stat.getElementsByTagName('output-bytes')[0].firstChild.data
+        opackets = stat.getElementsByTagName('output-packets')[0].firstChild.data
 
       input_errs = interface.getElementsByTagName('input-error-list')
       if(input_errs):
-          err = input_errs[0]
-          idrops = err.getElementsByTagName('input-drops')[0].firstChild.data
-          ierrs = err.getElementsByTagName('input-errors')[0].firstChild.data
+        err = input_errs[0]
+        idrops = err.getElementsByTagName('input-drops')[0].firstChild.data
+        ierrs = err.getElementsByTagName('input-errors')[0].firstChild.data
 
       output_errs = interface.getElementsByTagName('output-error-list')
       if(output_errs):
-          err = output_errs[0]
-          odrops = err.getElementsByTagName('output-drops')[0].firstChild.data
-          oerrs = err.getElementsByTagName('output-errors')[0].firstChild.data
+        err = output_errs[0]
+        odrops = err.getElementsByTagName('output-drops')[0].firstChild.data
+        oerrs = err.getElementsByTagName('output-errors')[0].firstChild.data
 
       traffic_stats = interface.getElementsByTagName('traffic-statistics')
       if traffic_stats:
-          stat = traffic_stats[0]
-          ibps = stat.getElementsByTagName('input-bps')[0].firstChild.data
-          obps = stat.getElementsByTagName('output-bps')[0].firstChild.data
+        stat = traffic_stats[0]
+        ibps = stat.getElementsByTagName('input-bps')[0].firstChild.data
+        obps = stat.getElementsByTagName('output-bps')[0].firstChild.data
 
       data.append([interface_name, snmp_if_index, timestamp, ibytes, ipackets, obytes, opackets, idrops, ierrs, odrops, oerrs, ibps, obps])
       write_to_csv(interface_name, lines=data)
