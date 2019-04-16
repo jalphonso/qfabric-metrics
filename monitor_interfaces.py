@@ -60,7 +60,7 @@ try:
       write_to_csv(interface_name, header=header)
       snmp_if_index = interface.getElementsByTagName('snmp-index')[0].firstChild.data
       stats = interface.getElementsByTagName('ethernet-mac-statistics')
-      if(stats):
+      if stats:
         stat = stats[0]
         ibytes = stat.getElementsByTagName('input-bytes')[0].firstChild.data
         ipackets = stat.getElementsByTagName('input-packets')[0].firstChild.data
@@ -68,13 +68,13 @@ try:
         opackets = stat.getElementsByTagName('output-packets')[0].firstChild.data
 
       input_errs = interface.getElementsByTagName('input-error-list')
-      if(input_errs):
+      if input_errs:
         err = input_errs[0]
         idrops = err.getElementsByTagName('input-drops')[0].firstChild.data
         ierrs = err.getElementsByTagName('input-errors')[0].firstChild.data
 
       output_errs = interface.getElementsByTagName('output-error-list')
-      if(output_errs):
+      if output_errs:
         err = output_errs[0]
         odrops = err.getElementsByTagName('output-drops')[0].firstChild.data
         oerrs = err.getElementsByTagName('output-errors')[0].firstChild.data

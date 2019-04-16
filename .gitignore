@@ -1,7 +1,11 @@
 csv/
+reports/
+*.zip
 *.pyc
 *.log
 *.xml
 *.tgz
 *.tar
 *.tar.gz
+data.json
+.vscode
