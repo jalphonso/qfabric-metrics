@@ -2,8 +2,6 @@ import csv
 import os
 from os import listdir
 from os.path import isfile, join
-from datetime import datetime
-
 import time
 
 csv_path = "csv"
@@ -83,12 +81,12 @@ def create_dict_key(data_dict, key, key_type):
 
 
 def parse_date_time(timestamp):
-  year = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").year
-  month = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").month
-  day = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").day
-  hour = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").hour
-  minute = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").minute
-  second = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").second
+  year = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_year
+  month = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_mon
+  day = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_mday
+  hour = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_hour
+  minute = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_min
+  second = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_sec
 
   time_elements = [year, month, day, hour, minute, second]
   return time_elements
@@ -162,7 +160,7 @@ def csvs_to_dict():
 
 
 def generate_report():
-  time_intervals = ['hour']
+  time_intervals = ['day']
   seconds = {'hour': 3600, 'day': 86400}
 
   #Intialize dataset to empty lists
@@ -211,10 +209,10 @@ def generate_report():
     try:
       f = open("reports/" + report + ".txt", 'w')
       if 'bps' in report:
-        f.write("Device        timestamp          min_input%(unit)-11s max_input%(unit)-11s avg_input%(unit)-11s "
+        f.write("Device        YYYY-mm-dd HH      min_input%(unit)-11s max_input%(unit)-11s avg_input%(unit)-11s "
                 "min_output%(unit)-11s max_output%(unit)-11s avg_output%(unit)s\n" % {'unit':unit})
       else:
-        f.write("Device        timestamp          avg_input%(unit)-13s avg_output%(unit)s\n" % {'unit':unit})
+        f.write("Device        YYYY-mm-dd HH      avg_input%(unit)-13s avg_output%(unit)s\n" % {'unit':unit})
       for device in devices:
         dev_in_data = eval('input_' + suffix + '_dev_processed_dataset')[device]
         dev_out_data = eval('output_' + suffix + '_dev_processed_dataset')[device]
