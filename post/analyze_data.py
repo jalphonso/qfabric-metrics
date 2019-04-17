@@ -19,6 +19,7 @@ fields = [input_bytes_name, output_bytes_name, input_packets_name, output_packet
           input_errors_name, output_errors_name, input_bps_name, output_bps_name]
 data = {}
 devices = []
+interfaces = []
 
 
 def average(num_list):
@@ -133,26 +134,40 @@ def csvs_to_dict():
           input_bps = row[11]
           output_bps = row[12]
 
+          #keep track of interfaces in global list
+          if interface not in interfaces:
+            interfaces.append(interface)
+          # add device to data dictionary if not present
+          if interface not in data:
+            data[interface] = {}
+
           for field in fields:
             # add keys to data dictionary if not present
             if field not in data[device]:
               data[device][field] = {}
+            if field not in data[interface]:
+              data[interface][field] = {}
 
             time_elements = parse_date_time(timestamp)
 
-            time_dict = data[device][field]
+            time_dict_dev = data[device][field]
+            time_dict_int = data[interface][field]
             # add timestamp to data dictionary if not present
             for idx, ele in enumerate(time_elements):
               if idx < 5:
-                time_dict = create_dict_key(time_dict, ele, 'dict')
+                time_dict_dev = create_dict_key(time_dict_dev, ele, 'dict')
+                time_dict_int = create_dict_key(time_dict_int, ele, 'dict')
               else:
-                time_dict = create_dict_key(time_dict, ele, 'list')
+                time_dict_dev = create_dict_key(time_dict_dev, ele, 'list')
+                time_dict_int = create_dict_key(time_dict_int, ele, 'list')
                 #Save counters to data structure
                 data_value = eval(field)
                 if data_value:
-                  time_dict.append({'interface': interface, 'data': int(data_value)})
+                  time_dict_dev.append({'interface': interface, 'data': int(data_value)})
+                  time_dict_int.append({'data': int(data_value)})
                 else:
-                  time_dict.append({'interface': interface, 'data': 0})
+                  time_dict_dev.append({'interface': interface, 'data': 0})
+                  time_dict_int.append({'data': 0})
       finally:
         f.close()
   except IOError:
@@ -164,34 +179,36 @@ def generate_report():
   seconds = {'hour': 3600, 'day': 86400}
 
   #Intialize dataset to empty lists
-  input_bytes_dev_processed_dataset = {}
-  input_packets_dev_processed_dataset = {}
-  output_bytes_dev_processed_dataset = {}
-  output_packets_dev_processed_dataset = {}
-  input_drops_dev_processed_dataset = {}
-  input_errors_dev_processed_dataset = {}
-  output_drops_dev_processed_dataset = {}
-  output_errors_dev_processed_dataset = {}
-  input_bps_dev_processed_dataset = {}
-  output_bps_dev_processed_dataset = {}
+  input_bytes_node_processed_dataset = {}
+  input_packets_node_processed_dataset = {}
+  output_bytes_node_processed_dataset = {}
+  output_packets_node_processed_dataset = {}
+  input_drops_node_processed_dataset = {}
+  input_errors_node_processed_dataset = {}
+  output_drops_node_processed_dataset = {}
+  output_errors_node_processed_dataset = {}
+  input_bps_node_processed_dataset = {}
+  output_bps_node_processed_dataset = {}
 
-  for device in devices:
-    for field in fields:
-      processed_dataset = eval(field + '_dev_processed_dataset')
-      if device not in processed_dataset:
-        processed_dataset[device] = []
+  node_sets = [devices, interfaces]
+  for node_set in node_sets:
+    for node in node_set:
+      for field in fields:
+        processed_dataset = eval(field + '_node_processed_dataset')
+        if node not in processed_dataset:
+          processed_dataset[node] = []
 
-      #parse the data for each time interval
-      for time_interval in time_intervals:
-        results_by_time = list(get_data_for_time_interval(data[device][field], time_interval))
-        for results in results_by_time:
-          for timestamp, dataset in results.items():
-            if 'bps' in field:
-              processed_dataset[device].append({timestamp:{'min':min(dataset),
-                                                           'max':max(dataset),
-                                                           'avg':average(dataset)}})
-            else:
-              processed_dataset[device].append({timestamp:{'avg':average_counters(dataset, seconds[time_interval])}})
+        #parse the data for each time interval
+        for time_interval in time_intervals:
+          results_by_time = list(get_data_for_time_interval(data[node][field], time_interval))
+          for results in results_by_time:
+            for timestamp, dataset in results.items():
+              if 'bps' in field:
+                processed_dataset[node].append({timestamp:{'min':min(dataset),
+                                                            'max':max(dataset),
+                                                            'avg':average(dataset)}})
+              else:
+                processed_dataset[node].append({timestamp:{'avg':average_counters(dataset, seconds[time_interval])}})
 
   reports = ['report_bps', 'report_packets', 'report_bytes', 'report_drops', 'report_errors']
   for report in reports:
@@ -209,22 +226,23 @@ def generate_report():
     try:
       f = open("reports/" + report + ".txt", 'w')
       if 'bps' in report:
-        f.write("Device        YYYY-mm-dd HH      min_input%(unit)-11s max_input%(unit)-11s avg_input%(unit)-11s "
+        f.write("Node              YYYY-mm-dd HH      min_input%(unit)-11s max_input%(unit)-11s avg_input%(unit)-11s "
                 "min_output%(unit)-11s max_output%(unit)-11s avg_output%(unit)s\n" % {'unit':unit})
       else:
-        f.write("Device        YYYY-mm-dd HH      avg_input%(unit)-13s avg_output%(unit)s\n" % {'unit':unit})
-      for device in devices:
-        dev_in_data = eval('input_' + suffix + '_dev_processed_dataset')[device]
-        dev_out_data = eval('output_' + suffix + '_dev_processed_dataset')[device]
-        for idx, dataset in enumerate(dev_in_data):
-          for timestamp, in_data in dataset.items():
-            out_data = dev_out_data[idx][timestamp]
-            if 'bps' in report:
-              f.write("%-13s %-18s %-20.2f %-20.2f %-20.2f %-21.2f %-21.2f %-0.2f\n" \
-                      % (device, timestamp, in_data['min'], in_data['max'], in_data['avg'],
-                        out_data['min'], out_data['max'], out_data['avg']))
-            else:
-              f.write("%-13s %-18s %-22.2f %-0.2f\n" % (device, timestamp, in_data['avg'], out_data['avg']))
+        f.write("Node              YYYY-mm-dd HH      avg_input%(unit)-13s avg_output%(unit)s\n" % {'unit':unit})
+      for node_set in node_sets:
+        for node in node_set:
+          dev_in_data = eval('input_' + suffix + '_node_processed_dataset')[node]
+          dev_out_data = eval('output_' + suffix + '_node_processed_dataset')[node]
+          for idx, dataset in enumerate(dev_in_data):
+            for timestamp, in_data in dataset.items():
+              out_data = dev_out_data[idx][timestamp]
+              if 'bps' in report:
+                f.write("%-17s %-18s %-20.2f %-20.2f %-20.2f %-21.2f %-21.2f %-0.2f\n" \
+                        % (node, timestamp, in_data['min'], in_data['max'], in_data['avg'],
+                          out_data['min'], out_data['max'], out_data['avg']))
+              else:
+                f.write("%-17s %-18s %-22.2f %-0.2f\n" % (node, timestamp, in_data['avg'], out_data['avg']))
     finally:
       f.close()
 
