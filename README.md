@@ -5,10 +5,10 @@ The second parts parses and analyzes the data.
 ### Usage
 Execute collection of data
 ```
-mkdir csv
+mkdir csv reports
 nohup python monitor_interfaces.py >> monitor_interfaces.log &
 ```
 
 Parse data
-TBD
+`python analyze_data.py`
 
