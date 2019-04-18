@@ -82,12 +82,9 @@ def create_dict_key(data_dict, key, key_type):
 
 
 def parse_date_time(timestamp):
-  year = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_year
-  month = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_mon
-  day = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_mday
-  hour = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_hour
-  minute = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_min
-  second = time.strptime(timestamp, "%Y-%m-%d %H:%M:%S").tm_sec
+  p_date, p_time = timestamp.split(' ')
+  year, month, day = p_date.split('-')
+  hour, minute, second = p_time.split(':')
 
   time_elements = [year, month, day, hour, minute, second]
   return time_elements
@@ -175,7 +172,7 @@ def csvs_to_dict():
 
 
 def generate_report():
-  time_intervals = ['day']
+  time_intervals = ['hour']
   seconds = {'hour': 3600, 'day': 86400}
 
   #Intialize dataset to empty lists
@@ -223,28 +220,33 @@ def generate_report():
       unit = '(errors/sec)'
     else:
       unit = '(bits/sec)'
+
     try:
       f = open("reports/" + report + ".txt", 'w')
-      if 'bps' in report:
-        f.write("Node              YYYY-mm-dd HH      min_input%(unit)-11s max_input%(unit)-11s avg_input%(unit)-11s "
-                "min_output%(unit)-11s max_output%(unit)-11s avg_output%(unit)s\n" % {'unit':unit})
-      else:
-        f.write("Node              YYYY-mm-dd HH      avg_input%(unit)-13s avg_output%(unit)s\n" % {'unit':unit})
-      for node_set in node_sets:
-        for node in node_set:
-          dev_in_data = eval('input_' + suffix + '_node_processed_dataset')[node]
-          dev_out_data = eval('output_' + suffix + '_node_processed_dataset')[node]
-          for idx, dataset in enumerate(dev_in_data):
-            for timestamp, in_data in dataset.items():
-              out_data = dev_out_data[idx][timestamp]
-              if 'bps' in report:
-                f.write("%-17s %-18s %-20.2f %-20.2f %-20.2f %-21.2f %-21.2f %-0.2f\n" \
-                        % (node, timestamp, in_data['min'], in_data['max'], in_data['avg'],
-                          out_data['min'], out_data['max'], out_data['avg']))
-              else:
-                f.write("%-17s %-18s %-22.2f %-0.2f\n" % (node, timestamp, in_data['avg'], out_data['avg']))
-    finally:
-      f.close()
+      try:
+        if 'bps' in report:
+          f.write("Node              YYYY-mm-dd HH      min_input%(unit)-11s max_input%(unit)-11s avg_input%(unit)-11s "
+                  "min_output%(unit)-11s max_output%(unit)-11s avg_output%(unit)s\n" % {'unit':unit})
+        else:
+          f.write("Node              YYYY-mm-dd HH      avg_input%(unit)-13s avg_output%(unit)s\n" % {'unit':unit})
+        for node_set in node_sets:
+          for node in node_set:
+            dev_in_data = eval('input_' + suffix + '_node_processed_dataset')[node]
+            dev_out_data = eval('output_' + suffix + '_node_processed_dataset')[node]
+            for idx, dataset in enumerate(dev_in_data):
+              for timestamp, in_data in dataset.items():
+                out_data = dev_out_data[idx][timestamp]
+                if 'bps' in report:
+                  f.write("%-17s %-18s %-20.2f %-20.2f %-20.2f %-21.2f %-21.2f %-0.2f\n" \
+                          % (node, timestamp, in_data['min'], in_data['max'], in_data['avg'],
+                            out_data['min'], out_data['max'], out_data['avg']))
+                else:
+                  f.write("%-17s %-18s %-22.2f %-0.2f\n" % (node, timestamp, in_data['avg'], out_data['avg']))
+      finally:
+        f.close()
+    except IOError:
+      print("Failed to write report; Make sure reports dir exists")
+
 
 if __name__ == "__main__":
   start = time.time()
