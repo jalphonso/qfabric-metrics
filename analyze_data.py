@@ -1,7 +1,8 @@
-import csv
-import os
+from interface_stats import InterfaceStats
 from os import listdir
 from os.path import isfile, join
+import csv
+import os
 import time
 
 csv_path = "csv"
@@ -117,19 +118,10 @@ def csvs_to_dict():
             first = False
             continue
 
-          interface = row[0]
-          snmp_if_index = row[1]
-          timestamp = row[2]
-          input_bytes = row[3]
-          input_packets = row[4]
-          output_bytes = row[5]
-          output_packets = row[6]
-          input_drops = row[7]
-          input_errors = row[8]
-          output_drops = row[9]
-          output_errors = row[10]
-          input_bps = row[11]
-          output_bps = row[12]
+          int_obj = InterfaceStats(*row)
+
+          interface = int_obj.interface
+          timestamp = int_obj.timestamp
 
           #keep track of interfaces in global list
           if interface not in interfaces:
@@ -158,7 +150,7 @@ def csvs_to_dict():
                 time_dict_dev = create_dict_key(time_dict_dev, ele, 'list')
                 time_dict_int = create_dict_key(time_dict_int, ele, 'list')
                 #Save counters to data structure
-                data_value = eval(field)
+                data_value = getattr(int_obj, field)
                 if data_value:
                   time_dict_dev.append({'interface': interface, 'data': int(data_value)})
                   time_dict_int.append({'data': int(data_value)})
@@ -175,7 +167,7 @@ def generate_report():
   time_intervals = ['hour']
   seconds = {'hour': 3600, 'day': 86400}
 
-  #Intialize dataset to empty lists
+  #Intialize dataset to empty dicts
   input_bytes_node_processed_dataset = {}
   input_packets_node_processed_dataset = {}
   output_bytes_node_processed_dataset = {}
@@ -231,8 +223,8 @@ def generate_report():
           f.write("Node              YYYY-mm-dd HH      avg_input%(unit)-13s avg_output%(unit)s\n" % {'unit':unit})
         for node_set in node_sets:
           for node in node_set:
-            dev_in_data = eval('input_' + suffix + '_node_processed_dataset')[node]
-            dev_out_data = eval('output_' + suffix + '_node_processed_dataset')[node]
+            dev_in_data = sorted(eval('input_' + suffix + '_node_processed_dataset')[node])
+            dev_out_data = sorted(eval('output_' + suffix + '_node_processed_dataset')[node])
             for idx, dataset in enumerate(dev_in_data):
               for timestamp, in_data in dataset.items():
                 out_data = dev_out_data[idx][timestamp]
