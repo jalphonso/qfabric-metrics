@@ -164,7 +164,7 @@ def csvs_to_dict():
 
 
 def generate_report():
-  time_intervals = ['hour']
+  time_interval = 'hour'
   seconds = {'hour': 3600, 'day': 86400}
 
   #Intialize dataset to empty dicts
@@ -187,17 +187,15 @@ def generate_report():
         if node not in processed_dataset:
           processed_dataset[node] = []
 
-        #parse the data for each time interval
-        for time_interval in time_intervals:
-          results_by_time = list(get_data_for_time_interval(data[node][field], time_interval))
-          for results in results_by_time:
-            for timestamp, dataset in results.items():
-              if 'bps' in field:
-                processed_dataset[node].append({timestamp:{'min':min(dataset),
-                                                            'max':max(dataset),
-                                                            'avg':average(dataset)}})
-              else:
-                processed_dataset[node].append({timestamp:{'avg':average_counters(dataset, seconds[time_interval])}})
+        results_by_time = list(get_data_for_time_interval(data[node][field], time_interval))
+        for results in results_by_time:
+          for timestamp, dataset in results.items():
+            if 'bps' in field:
+              processed_dataset[node].append({timestamp:{'min':min(dataset),
+                                                          'max':max(dataset),
+                                                          'avg':average(dataset)}})
+            else:
+              processed_dataset[node].append({timestamp:{'avg':average_counters(dataset, seconds[time_interval])}})
 
   reports = ['report_bps', 'report_packets', 'report_bytes', 'report_drops', 'report_errors']
   for report in reports:
