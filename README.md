@@ -19,7 +19,7 @@ Parse data
 
 
 ###############################################################################
-###			Data Collection:                                    
+###			Data Collection:
 ###############################################################################
 
 ###############################################################################
@@ -36,7 +36,7 @@ Juniper QFabric Director 13.1.8962 2016-02-17 14:28:24 UTC
 [root@dg0 ~]# pwd
 /root
 [root@dg0 ~]# cd /pbdata/packages/scripts/csv
-	NOTE: If the csv file isn't auto created, make sure you create the csv 
+	NOTE: If the csv file isn't auto created, make sure you create the csv
 		folder in /scripts folder.
 
 [root@dg0 ~]# cd ..
@@ -45,7 +45,7 @@ Juniper QFabric Director 13.1.8962 2016-02-17 14:28:24 UTC
 ###SCP script to the /pbdata/packages/scripts folder
 ###############################################################################
 
-scp the "monitor_interfaces_v1.0.0.py" file located in the scripts folder to local 
+scp the "monitor_interfaces.py" file located in the scripts folder to local
 workstation to be burned to cd.
 You will also need to scp the file to the Production DG when the time comes.
 
@@ -65,17 +65,17 @@ drwxr-xr-x 4 root root 3.8K Apr  5 12:57 .
 drwxrwxrwx 6 root root 2.0K Apr  5 11:14 ..
 drwxr-xr-x 2 root root 3.8K Apr  4 19:23 csv
 -rw-r--r-- 1 root root  65K Apr  5 12:52 monitor_interfaces.log
--rw-r--r-- 1 root root 4.3K Apr  5 12:56 monitor_interfaces_v1.0.0.py
+-rw-r--r-- 1 root root 4.3K Apr  5 12:56 monitor_interfaces.py
 drwxr-xr-x 2 root root 3.8K Apr  5 12:57 old
 [root@dg0 scripts]#
-[root@dg0 scripts]# md5sum monitor_interfaces_v1.0.0.py
-56a93d7641c3c80ed8cd04a8b3a99d99  monitor_interfaces_v1.0.0.py
-[root@dg0 scripts]# cat monitor_interfaces_v1.0.0.py | wc -l
+[root@dg0 scripts]# md5sum monitor_interfaces.py
+56a93d7641c3c80ed8cd04a8b3a99d99  monitor_interfaces.py
+[root@dg0 scripts]# cat monitor_interfaces.py | wc -l
 98
 [root@dg0 scripts]#
 
 ###############################################################################
-###Start the "monitor_interfaces_v1.0.0.py" script.
+###Start the "monitor_interfaces.py" script.
 ###############################################################################
 
 [root@dg0 scripts]# pwd
@@ -86,9 +86,9 @@ drwxr-xr-x 4 root root 3.8K Apr  5 13:11 .
 drwxrwxrwx 6 root root 2.0K Apr  5 11:14 ..
 drwxr-xr-x 2 root root 3.8K Apr  4 19:23 csv
 -rw-r--r-- 1 root root  65K Apr  5 12:52 monitor_interfaces.log
--rw-r--r-- 1 root root 4.3K Apr  5 12:56 monitor_interfaces_v1.0.0.py
+-rw-r--r-- 1 root root 4.3K Apr  5 12:56 monitor_interfaces.py
 drwxr-xr-x 2 root root 3.8K Apr  5 12:57 old
-[root@dg0 scripts]# nohup python monitor_interfaces_v1.0.0.py >> monitor_interfaces.log &
+[root@dg0 scripts]# nohup python monitor_interfaces.py >> monitor_interfaces.log &
 [1] 2883
 [root@dg0 scripts]#
 
@@ -126,7 +126,7 @@ Find the PID of the script:
 
 [root@dg0 csv]#
 [root@dg0 csv]# ps aux | grep python
-root      2883  0.5  0.3 209524 119708 ?       S    13:15   0:41 python monitor_interfaces_v1.0.0.py
+root      2883  0.5  0.3 209524 119708 ?       S    13:15   0:41 python monitor_interfaces.py
 root     18505  0.0  0.0  61212   808 pts/1    S+   15:13   0:00 grep python
 [root@dg0 csv]#
 
@@ -138,11 +138,11 @@ kill -SIGINT 2883
 
 
 ###############################################################################
-Post Processing 
+Post Processing
 ###############################################################################
 
 
-Copy the analyze_data_v1.0.0.py, interface_stats_v1.0.0.py files to your Python 2.7 environement.
+Copy the analyze_data.py, interface_stats.py files to your Python 2.7 environement.
 
 Make sure you have the following two directories:
 	mkdir csv
@@ -150,7 +150,5 @@ Make sure you have the following two directories:
 Place all your csv files retrieved from the csv directory on the QFabric Director into the csv folder.
 
 Execute the script:
-	python analyze_data_v1.0.0.py
-
-
+	python analyze_data.py
 
