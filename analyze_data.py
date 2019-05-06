@@ -1,26 +1,34 @@
 # <*******************
-# 
+#
 # Copyright 2019 Juniper Networks, Inc. All rights reserved.
 # Licensed under the Juniper Networks Script Software License (the "License").
 # You may not use this script file except in compliance with the License, which is located at
 # http://www.juniper.net/support/legal/scriptlicense/
 # Unless required by applicable law or otherwise agreed to in writing by the parties, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# 
+#
 # Author: Joe Alphonso
 # Email: jalphonso@juniper.net
-# Version: 1.0.0
-# Release Date: 4/30/2019
-# 
+# Version: 1.1.0
+# Release Date: 05/06/2019
+#
 # *******************>
 from interface_stats import InterfaceStats
 from os import listdir
 from os.path import isfile, join
+import copy
 import csv
+import json
+import operator
 import os
 import time
 
-csv_path = "csv"
+#User Input
+csv_path = "csv2"
+report_path = "reports2"
+bps_threshold = 1024*1024*1024*15
+TIME_INTERVAL = 'hour' #choices are hour or day
+
 input_bytes_name = 'input_bytes'
 input_packets_name = 'input_packets'
 output_bytes_name = 'output_bytes'
@@ -34,15 +42,26 @@ output_bps_name = 'output_bps'
 fields = [input_bytes_name, output_bytes_name, input_packets_name, output_packets_name, input_drops_name, output_drops_name,
           input_errors_name, output_errors_name, input_bps_name, output_bps_name]
 data = {}
+node_report_data = {}
 devices = []
 interfaces = []
+
+
+def bps_to_human(num, suffix='bps'):
+    for unit in ['','K','M','G','T','P','E','Z']:
+        if abs(num) < 1024.0:
+            return "%3.2f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.2f%s%s" % (num, 'Y', suffix)
 
 
 def average(num_list):
   return round(float(sum(num_list))/len(num_list),2)
 
+
 def average_counters(counter_list, seconds):
   return round((float(max(counter_list)) - float(min(counter_list)))/seconds, 2)
+
 
 def get_data_for_time_interval(d, time_interval='minute'):
   sub_data = []
@@ -178,8 +197,8 @@ def csvs_to_dict():
     print("Failed to read file")
 
 
-def generate_report():
-  time_interval = 'hour'
+def generate_reports():
+  time_interval = TIME_INTERVAL
   seconds = {'hour': 3600, 'day': 86400}
 
   #Intialize dataset to empty dicts
@@ -227,7 +246,7 @@ def generate_report():
       unit = '(bits/sec)'
 
     try:
-      f = open("reports/" + report + ".txt", 'w')
+      f = open(report_path + "/" + report + ".txt", 'w')
       try:
         if 'bps' in report:
           f.write("Node              YYYY-mm-dd HH      min_input%(unit)-11s max_input%(unit)-11s avg_input%(unit)-11s "
@@ -242,7 +261,7 @@ def generate_report():
               for timestamp, in_data in dataset.items():
                 out_data = dev_out_data[idx][timestamp]
                 if 'bps' in report:
-                  f.write("%-17s %-18s %-20.2f %-20.2f %-20.2f %-21.2f %-21.2f %-0.2f\n" \
+                  f.write("%-17s %-18s %-20d %-20d %-20d %-21d %-21d %d\n" \
                           % (node, timestamp, in_data['min'], in_data['max'], in_data['avg'],
                             out_data['min'], out_data['max'], out_data['avg']))
                 else:
@@ -253,9 +272,165 @@ def generate_report():
       print("Failed to write report; Make sure reports dir exists")
 
 
+def analyze_reports():
+  try:
+    f = open(report_path + "/report_bps.txt", 'r')
+    try:
+      f.readline() #throw away header
+      lines = f.readlines()
+      for line in lines:
+        row = line.split()
+        node = row[0]
+        i_max = int(row[4])
+        o_max = int(row[7])
+
+        if node not in node_report_data:
+          node_report_data[node] = {}
+
+        if 'i_max' not in node_report_data[node] or not node_report_data[node]['i_max'] or i_max > node_report_data[node]['i_max']:
+          node_report_data[node]['i_max'] = i_max
+        if 'o_max' not in node_report_data[node] or not node_report_data[node]['o_max'] or o_max > node_report_data[node]['o_max']:
+          node_report_data[node]['o_max'] = o_max
+
+    finally:
+      f.close()
+  except IOError:
+    print("Failed to read report_bps.txt; Make sure report exists")
+
+  try:
+    f = open(report_path + "/report_bytes.txt", 'r')
+    try:
+      f.readline() #throw away header
+      lines = f.readlines()
+      for line in lines:
+        row = line.split()
+        node = row[0]
+        i_avg = int(float(row[3]) * 8)
+        o_avg = int(float(row[4]) * 8)
+
+        if node not in node_report_data:
+          node_report_data[node] = {}
+
+        if 'i_avg' not in node_report_data[node] or not node_report_data[node]['i_avg'] or i_avg > node_report_data[node]['i_avg']:
+          node_report_data[node]['i_avg'] = i_avg
+        if 'o_avg' not in node_report_data[node] or not node_report_data[node]['o_avg'] or o_avg > node_report_data[node]['o_avg']:
+          node_report_data[node]['o_avg'] = o_avg
+    finally:
+      f.close()
+  except IOError:
+    print("Failed to read report_bytes.txt; Make sure report exists")
+
+  try:
+    f = open(report_path + "/report_drops.txt", 'r')
+    try:
+      f.readline() #throw away header
+      lines = f.readlines()
+      for line in lines:
+        row = line.split()
+        node = row[0]
+        i_drops = int(float(row[3]))
+        o_drops = int(float(row[4]))
+
+        if node not in node_report_data:
+          node_report_data[node] = {}
+
+        if 'i_drops' not in node_report_data[node] or not node_report_data[node]['i_drops'] or i_drops > node_report_data[node]['i_drops']:
+          node_report_data[node]['i_drops'] = i_drops
+        if 'o_drops' not in node_report_data[node] or not node_report_data[node]['o_drops'] or o_drops > node_report_data[node]['o_drops']:
+          node_report_data[node]['o_drops'] = o_drops
+    finally:
+      f.close()
+  except IOError:
+    print("Failed to read report_drops.txt; Make sure report exists")
+
+  try:
+    f = open(report_path + "/report_errors.txt", 'r')
+    try:
+      f.readline() #throw away header
+      lines = f.readlines()
+      for line in lines:
+        row = line.split()
+        node = row[0]
+        i_errors = int(float(row[3]))
+        o_errors = int(float(row[4]))
+
+        if node not in node_report_data:
+          node_report_data[node] = {}
+
+        if 'i_errors' not in node_report_data[node] or not node_report_data[node]['i_errors'] or i_errors > node_report_data[node]['i_errors']:
+          node_report_data[node]['i_errors'] = i_errors
+        if 'o_errors' not in node_report_data[node] or not node_report_data[node]['o_errors'] or o_errors > node_report_data[node]['o_errors']:
+          node_report_data[node]['o_errors'] = o_errors
+    finally:
+      f.close()
+  except IOError:
+    print("Failed to read report_errors.txt; Make sure report exists")
+
+
+def print_and_save_summary():
+  node_report_data_human = {}
+  print("\nSUMMARY")
+  for node, values in node_report_data.items():
+    if values['i_drops']:
+      print("Node %s has input drops" % node)
+    if values['o_drops']:
+      print("Node %s has output drops" % node)
+    if values['i_errors']:
+      print("Node %s has input errors" % node)
+    if values['o_errors']:
+      print("Node %s has output errors" % node)
+    if values['o_avg'] > bps_threshold or values['o_max'] > bps_threshold:
+      print("Node %s has exceeded the bps_threshold of %s for outbound traffic" % (node, bps_to_human(bps_threshold)))
+    if values['i_avg'] > bps_threshold or values['i_max'] > bps_threshold:
+      print("Node %s has exceeded the bps_threshold of %s for inbound traffic" % (node, bps_to_human(bps_threshold)))
+
+    node_report_data_human[node] = {}
+    for k, v in values.items():
+      if 'err' in k:
+        node_report_data_human[node][k] = str(v) + ' errors/sec'
+      elif 'drop' in k:
+        node_report_data_human[node][k] = str(v) + ' drops/sec'
+      else:
+        node_report_data_human[node][k] = bps_to_human(v)
+
+  with open(report_path + "/summary.json", 'w') as f:
+    json.dump(sorted(node_report_data_human.items()), f)
+
+def get_node(val, key):
+  for k, v in node_report_data.items():
+    if v[key] == val:
+      return k
+  return "Node not found for key %s and value %s" % (key, val)
+
+def print_top_talkers():
+  #print(node_report_data)
+  for key in ['i_max', 'o_max', 'i_avg', 'o_avg']:
+    if key == 'i_max':
+      print("\nHIGHEST INPUT BURSTS")
+      friendly_key = 'input burst'
+    if key == 'o_max':
+      print("\nHIGHEST OUTPUT BURSTS")
+      friendly_key = 'output burst'
+    if key == 'i_avg':
+      print("\nHIGHEST INPUT AVERAGES")
+      friendly_key = 'input average'
+    if key == 'o_avg':
+      print("\nHIGHEST OUTPUT AVERAGES")
+      friendly_key = 'output average'
+    temp_dict = copy.deepcopy(node_report_data)
+    for i in range(10):
+      max_val = max(d[key] for d in temp_dict.values())
+      node = get_node(max_val, key)
+      print("Node %s is the #%s talker with an %s of %s" % (node, i+1, friendly_key, bps_to_human(max_val)))
+      temp_dict.pop(node)
+
+
 if __name__ == "__main__":
   start = time.time()
   csvs_to_dict()
-  generate_report()
+  generate_reports()
+  analyze_reports()
+  print_and_save_summary()
+  print_top_talkers()
   end = time.time()
-  print("Post processing took %s seconds to run" % (end - start))
+  print("\nPost processing took %s seconds to run" % (end - start))
