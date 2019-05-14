@@ -21,19 +21,19 @@ class InterfaceStats(object):
   def __init__(self, interface, snmp_if_index, timestamp, input_bytes, input_packets,
                output_bytes, output_packets, input_drops, input_errors, output_drops,
                output_errors, input_bps, output_bps):
-    self._interface = interface
-    self._snmp_if_index = snmp_if_index
-    self._timestamp = timestamp
-    self._input_bytes = input_bytes
-    self._input_packets = input_packets
-    self._output_bytes = output_bytes
-    self._output_packets = output_packets
-    self._input_drops = input_drops
-    self._input_errors = input_errors
-    self._output_drops = output_drops
-    self._output_errors = output_errors
-    self._input_bps = input_bps
-    self._output_bps = output_bps
+    self.interface = interface
+    self.snmp_if_index = snmp_if_index
+    self.timestamp = timestamp
+    self.input_bytes = input_bytes
+    self.input_packets = input_packets
+    self.output_bytes = output_bytes
+    self.output_packets = output_packets
+    self.input_drops = input_drops
+    self.input_errors = input_errors
+    self.output_drops = output_drops
+    self.output_errors = output_errors
+    self.input_bps = input_bps
+    self.output_bps = output_bps
 
   @property
   def interface(self):
