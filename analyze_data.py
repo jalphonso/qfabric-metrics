@@ -5,12 +5,13 @@
 # You may not use this script file except in compliance with the License, which is located at
 # http://www.juniper.net/support/legal/scriptlicense/
 # Unless required by applicable law or otherwise agreed to in writing by the parties, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied.
 #
 # Author: Joe Alphonso
 # Email: jalphonso@juniper.net
-# Version: 1.1.0
-# Release Date: 05/06/2019
+# Version: 1.1.1
+# Release Date: 06/03/2019
 #
 # *******************>
 from interface_stats import InterfaceStats
@@ -39,8 +40,8 @@ output_drops_name = 'output_drops'
 output_errors_name = 'output_errors'
 input_bps_name = 'input_bps'
 output_bps_name = 'output_bps'
-fields = [input_bytes_name, output_bytes_name, input_packets_name, output_packets_name, input_drops_name, output_drops_name,
-          input_errors_name, output_errors_name, input_bps_name, output_bps_name]
+fields = [input_bytes_name, output_bytes_name, input_packets_name, output_packets_name, input_drops_name,
+          output_drops_name, input_errors_name, output_errors_name, input_bps_name, output_bps_name]
 data = {}
 node_report_data = {}
 devices = []
@@ -127,7 +128,8 @@ def parse_date_time(timestamp):
 
 def csvs_to_dict():
   try:
-    csv_files = [f for f in listdir(csv_path) if isfile(join(csv_path, f)) and os.path.splitext(f)[-1]=='.csv']
+    csv_files = [f for f in listdir(csv_path) if isfile(join(csv_path, f))
+                 and os.path.splitext(f)[-1]=='.csv' and 'xe-' not in f]
     for filename in csv_files:
       fparts = filename.split('-')
       if 'IC' in filename:
@@ -287,9 +289,11 @@ def analyze_reports():
         if node not in node_report_data:
           node_report_data[node] = {}
 
-        if 'i_max' not in node_report_data[node] or not node_report_data[node]['i_max'] or i_max > node_report_data[node]['i_max']:
+        if ('i_max' not in node_report_data[node] or not node_report_data[node]['i_max']
+            or i_max > node_report_data[node]['i_max']):
           node_report_data[node]['i_max'] = i_max
-        if 'o_max' not in node_report_data[node] or not node_report_data[node]['o_max'] or o_max > node_report_data[node]['o_max']:
+        if ('o_max' not in node_report_data[node] or not node_report_data[node]['o_max']
+            or o_max > node_report_data[node]['o_max']):
           node_report_data[node]['o_max'] = o_max
 
     finally:
@@ -311,9 +315,11 @@ def analyze_reports():
         if node not in node_report_data:
           node_report_data[node] = {}
 
-        if 'i_avg' not in node_report_data[node] or not node_report_data[node]['i_avg'] or i_avg > node_report_data[node]['i_avg']:
+        if ('i_avg' not in node_report_data[node] or not node_report_data[node]['i_avg']
+            or i_avg > node_report_data[node]['i_avg']):
           node_report_data[node]['i_avg'] = i_avg
-        if 'o_avg' not in node_report_data[node] or not node_report_data[node]['o_avg'] or o_avg > node_report_data[node]['o_avg']:
+        if ('o_avg' not in node_report_data[node] or not node_report_data[node]['o_avg']
+            or o_avg > node_report_data[node]['o_avg']):
           node_report_data[node]['o_avg'] = o_avg
     finally:
       f.close()
@@ -334,9 +340,11 @@ def analyze_reports():
         if node not in node_report_data:
           node_report_data[node] = {}
 
-        if 'i_drops' not in node_report_data[node] or not node_report_data[node]['i_drops'] or i_drops > node_report_data[node]['i_drops']:
+        if ('i_drops' not in node_report_data[node] or not node_report_data[node]['i_drops']
+             or i_drops > node_report_data[node]['i_drops']):
           node_report_data[node]['i_drops'] = i_drops
-        if 'o_drops' not in node_report_data[node] or not node_report_data[node]['o_drops'] or o_drops > node_report_data[node]['o_drops']:
+        if ('o_drops' not in node_report_data[node] or not node_report_data[node]['o_drops']
+            or o_drops > node_report_data[node]['o_drops']):
           node_report_data[node]['o_drops'] = o_drops
     finally:
       f.close()
@@ -357,9 +365,11 @@ def analyze_reports():
         if node not in node_report_data:
           node_report_data[node] = {}
 
-        if 'i_errors' not in node_report_data[node] or not node_report_data[node]['i_errors'] or i_errors > node_report_data[node]['i_errors']:
+        if ('i_errors' not in node_report_data[node] or not node_report_data[node]['i_errors']
+            or i_errors > node_report_data[node]['i_errors']):
           node_report_data[node]['i_errors'] = i_errors
-        if 'o_errors' not in node_report_data[node] or not node_report_data[node]['o_errors'] or o_errors > node_report_data[node]['o_errors']:
+        if ('o_errors' not in node_report_data[node] or not node_report_data[node]['o_errors']
+            or o_errors > node_report_data[node]['o_errors']):
           node_report_data[node]['o_errors'] = o_errors
     finally:
       f.close()
@@ -396,8 +406,8 @@ def print_and_save_summary():
   with open(report_path + "/summary.json", 'w') as f:
     json.dump(sorted(node_report_data_human.items()), f)
 
-def get_node(val, key):
-  for k, v in node_report_data.items():
+def get_node(d, val, key):
+  for k, v in d.items():
     if v[key] == val:
       return k
   return "Node not found for key %s and value %s" % (key, val)
@@ -420,7 +430,7 @@ def print_top_talkers():
     temp_dict = copy.deepcopy(node_report_data)
     for i in range(10):
       max_val = max(d[key] for d in temp_dict.values())
-      node = get_node(max_val, key)
+      node = get_node(temp_dict, max_val, key)
       print("Node %s is the #%s talker with an %s of %s" % (node, i+1, friendly_key, bps_to_human(max_val)))
       temp_dict.pop(node)
 

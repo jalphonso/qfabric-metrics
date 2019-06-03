@@ -9,3 +9,8 @@ reports/
 *.tar.gz
 data.json
 .vscode
+*.csv
+*.txt
+*.json
+migrate*.py
+*.sql
