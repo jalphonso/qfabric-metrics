@@ -12,10 +12,11 @@ nohup python monitor_interfaces.py >> monitor_interfaces.log &
 Parse data
 `python analyze_data.py`
 
+### Requirements
+No external libraries are needed; however, Python 3.7 (64-bit) is required for analyze_data.py
+Since monitor_interfaces.py runs on the Qfabric, Python 2.4 is what is used for that.
 
-
-
-
+Memory considerations: consumes approximately 1.11GB per 100K lines of log entries in csv format
 
 
 ###############################################################################

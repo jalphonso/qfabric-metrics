@@ -10,8 +10,8 @@
 #
 # Author: Joe Alphonso
 # Email: jalphonso@juniper.net
-# Version: 1.1.1
-# Release Date: 06/03/2019
+# Version: 1.1.2
+# Release Date: 06/07/2019
 #
 # *******************>
 from interface_stats import InterfaceStats
@@ -20,7 +20,6 @@ from os.path import isfile, join
 import copy
 import csv
 import json
-import operator
 import os
 import time
 
@@ -221,17 +220,17 @@ def generate_reports():
       for field in fields:
         processed_dataset = eval(field + '_node_processed_dataset')
         if node not in processed_dataset:
-          processed_dataset[node] = []
+          processed_dataset[node] = {}
 
         results_by_time = list(get_data_for_time_interval(data[node][field], time_interval))
         for results in results_by_time:
           for timestamp, dataset in results.items():
             if 'bps' in field:
-              processed_dataset[node].append({timestamp:{'min':min(dataset),
-                                                          'max':max(dataset),
-                                                          'avg':average(dataset)}})
+              processed_dataset[node][timestamp] = {'min':min(dataset),
+                                                    'max':max(dataset),
+                                                    'avg':average(dataset)}
             else:
-              processed_dataset[node].append({timestamp:{'avg':average_counters(dataset, seconds[time_interval])}})
+              processed_dataset[node][timestamp] = {'avg':average_counters(dataset, seconds[time_interval])}
 
   reports = ['report_bps', 'report_packets', 'report_bytes', 'report_drops', 'report_errors']
   for report in reports:
@@ -257,17 +256,16 @@ def generate_reports():
           f.write("Node              YYYY-mm-dd HH      avg_input%(unit)-13s avg_output%(unit)s\n" % {'unit':unit})
         for node_set in node_sets:
           for node in node_set:
-            dev_in_data = sorted(eval('input_' + suffix + '_node_processed_dataset')[node])
-            dev_out_data = sorted(eval('output_' + suffix + '_node_processed_dataset')[node])
-            for idx, dataset in enumerate(dev_in_data):
-              for timestamp, in_data in dataset.items():
-                out_data = dev_out_data[idx][timestamp]
-                if 'bps' in report:
-                  f.write("%-17s %-18s %-20d %-20d %-20d %-21d %-21d %d\n" \
-                          % (node, timestamp, in_data['min'], in_data['max'], in_data['avg'],
-                            out_data['min'], out_data['max'], out_data['avg']))
-                else:
-                  f.write("%-17s %-18s %-22.2f %-0.2f\n" % (node, timestamp, in_data['avg'], out_data['avg']))
+            dev_in_data = eval('input_' + suffix + '_node_processed_dataset')[node]
+            dev_out_data = eval('output_' + suffix + '_node_processed_dataset')[node]
+            for timestamp, in_data in dev_in_data.items():
+              out_data = dev_out_data[timestamp]
+              if 'bps' in report:
+                f.write("%-17s %-18s %-20d %-20d %-20d %-21d %-21d %d\n" \
+                        % (node, timestamp, in_data['min'], in_data['max'], in_data['avg'],
+                          out_data['min'], out_data['max'], out_data['avg']))
+              else:
+                f.write("%-17s %-18s %-22.2f %-0.2f\n" % (node, timestamp, in_data['avg'], out_data['avg']))
       finally:
         f.close()
     except IOError:
