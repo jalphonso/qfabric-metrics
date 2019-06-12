@@ -10,8 +10,8 @@
 #
 # Author: Joe Alphonso
 # Email: jalphonso@juniper.net
-# Version: 1.1.2
-# Release Date: 06/07/2019
+# Version: 1.1.3
+# Release Date: 06/11/2019
 #
 # *******************>
 from interface_stats import InterfaceStats
@@ -21,6 +21,7 @@ import copy
 import csv
 import json
 import os
+import sys
 import time
 
 #User Input
@@ -196,6 +197,8 @@ def csvs_to_dict():
         f.close()
   except IOError:
     print("Failed to read file")
+    print(f"Make sure csv directory named '{csv_path}' exists")
+    sys.exit(1)
 
 
 def generate_reports():
