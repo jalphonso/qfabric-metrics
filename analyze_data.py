@@ -25,10 +25,11 @@ import sys
 import time
 
 #User Input
-csv_path = "csv2"
-report_path = "reports2"
+csv_path = "csv-xe"
+report_path = "reports-xe"
 bps_threshold = 1024*1024*1024*15
 TIME_INTERVAL = 'hour' #choices are hour or day
+TOP_TALKERS = 3
 
 input_bytes_name = 'input_bytes'
 input_packets_name = 'input_packets'
@@ -429,7 +430,7 @@ def print_top_talkers():
       print("\nHIGHEST OUTPUT AVERAGES")
       friendly_key = 'output average'
     temp_dict = copy.deepcopy(node_report_data)
-    for i in range(10):
+    for i in range(TOP_TALKERS):
       max_val = max(d[key] for d in temp_dict.values())
       node = get_node(temp_dict, max_val, key)
       print("Node %s is the #%s talker with an %s of %s" % (node, i+1, friendly_key, bps_to_human(max_val)))
