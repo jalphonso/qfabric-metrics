@@ -25,12 +25,21 @@ import sys
 import time
 
 #User Input
-csv_path = "csv-xe"
-report_path = "reports-xe"
-bps_threshold = 1024*1024*1024*15
-TIME_INTERVAL = 'hour' #choices are hour or day
+CSV_PATH = "csv-xe"
+REPORT_PATH = "reports-xe"
+GIGABIT_THRESHOLD = 15
+TIME_INTERVAL = 'hour'  # choices are hour or day
+INTERFACE_MATCH = 'xe' # i.e. fte or xe or name of switch
 TOP_TALKERS = 3
+#End of User Input
 
+#############################################################################################################################################
+#############################################################################################################################################
+# DO NOT EDIT ANYTHING BELOW HERE
+#############################################################################################################################################
+#############################################################################################################################################
+
+bps_threshold = 1024*1024*1024*GIGABIT_THRESHOLD
 input_bytes_name = 'input_bytes'
 input_packets_name = 'input_packets'
 output_bytes_name = 'output_bytes'
@@ -129,8 +138,12 @@ def parse_date_time(timestamp):
 
 def csvs_to_dict():
   try:
-    csv_files = [f for f in listdir(csv_path) if isfile(join(csv_path, f))
-                 and os.path.splitext(f)[-1]=='.csv' and 'xe-' not in f]
+    ##################################################################################
+    ##                         INTERFACE MATCHING SECTION                           ##
+    ##################################################################################
+    csv_files = [f for f in listdir(CSV_PATH) if isfile(join(CSV_PATH, f))
+                 and os.path.splitext(f)[-1]=='.csv' and INTERFACE_MATCH in f]
+    ##################################################################################
     for filename in csv_files:
       fparts = filename.split('-')
       if 'IC' in filename:
@@ -146,14 +159,20 @@ def csvs_to_dict():
       if device not in data:
         data[device] = {}
 
-      f = open(os.path.join(csv_path, filename), 'r')
+      f = open(os.path.join(CSV_PATH, filename), 'r')
       try:
         reader = csv.reader(f)
         first = True
         for row in reader:
           if first:
             first = False
+            second = True
             continue
+          if second:
+            first_timestamp = row[2]
+            second = False
+          else:
+            last_timestamp = row[2]
 
           int_obj = InterfaceStats(*row)
 
@@ -194,11 +213,12 @@ def csvs_to_dict():
                 else:
                   time_dict_dev.append({'interface': interface, 'data': 0})
                   time_dict_int.append({'data': 0})
+        print("CSV %s has date range from %s to %s" % (filename, first_timestamp, last_timestamp))
       finally:
         f.close()
   except IOError:
     print("Failed to read file")
-    print(f"Make sure csv directory named '{csv_path}' exists")
+    print(f"Make sure csv directory named '{CSV_PATH}' exists")
     sys.exit(1)
 
 
@@ -251,7 +271,7 @@ def generate_reports():
       unit = '(bits/sec)'
 
     try:
-      f = open(report_path + "/" + report + ".txt", 'w')
+      f = open(REPORT_PATH + "/" + report + ".txt", 'w')
       try:
         if 'bps' in report:
           f.write("Node              YYYY-mm-dd HH      min_input%(unit)-11s max_input%(unit)-11s avg_input%(unit)-11s "
@@ -278,7 +298,7 @@ def generate_reports():
 
 def analyze_reports():
   try:
-    f = open(report_path + "/report_bps.txt", 'r')
+    f = open(REPORT_PATH + "/report_bps.txt", 'r')
     try:
       f.readline() #throw away header
       lines = f.readlines()
@@ -304,7 +324,7 @@ def analyze_reports():
     print("Failed to read report_bps.txt; Make sure report exists")
 
   try:
-    f = open(report_path + "/report_bytes.txt", 'r')
+    f = open(REPORT_PATH + "/report_bytes.txt", 'r')
     try:
       f.readline() #throw away header
       lines = f.readlines()
@@ -329,7 +349,7 @@ def analyze_reports():
     print("Failed to read report_bytes.txt; Make sure report exists")
 
   try:
-    f = open(report_path + "/report_drops.txt", 'r')
+    f = open(REPORT_PATH + "/report_drops.txt", 'r')
     try:
       f.readline() #throw away header
       lines = f.readlines()
@@ -354,7 +374,7 @@ def analyze_reports():
     print("Failed to read report_drops.txt; Make sure report exists")
 
   try:
-    f = open(report_path + "/report_errors.txt", 'r')
+    f = open(REPORT_PATH + "/report_errors.txt", 'r')
     try:
       f.readline() #throw away header
       lines = f.readlines()
@@ -405,7 +425,7 @@ def print_and_save_summary():
       else:
         node_report_data_human[node][k] = bps_to_human(v)
 
-  with open(report_path + "/summary.json", 'w') as f:
+  with open(REPORT_PATH + "/summary.json", 'w') as f:
     json.dump(sorted(node_report_data_human.items()), f)
 
 def get_node(d, val, key):
