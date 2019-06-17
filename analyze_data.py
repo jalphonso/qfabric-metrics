@@ -10,8 +10,8 @@
 #
 # Author: Joe Alphonso
 # Email: jalphonso@juniper.net
-# Version: 1.1.3
-# Release Date: 06/11/2019
+# Version: 1.3.0
+# Release Date: 06/17/2019
 #
 # *******************>
 from interface_stats import InterfaceStats
