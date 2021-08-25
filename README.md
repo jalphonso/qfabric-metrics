@@ -19,13 +19,9 @@ Since monitor_interfaces.py runs on the Qfabric, Python 2.4 is what is used for 
 Memory considerations: consumes approximately 1.11GB per 100K lines of log entries in csv format
 
 
-###############################################################################
-###			Data Collection:
-###############################################################################
+### Data Collection:
 
-###############################################################################
-###Log into Master DG as user root.
-###############################################################################
+Log into Master DG as user root.
 
 ```
 login as: root
@@ -43,23 +39,15 @@ Juniper QFabric Director 13.1.8962 2016-02-17 14:28:24 UTC
 
 [root@dg0 ~]# cd ..
 ```
-###############################################################################
-###SCP script to the /pbdata/packages/scripts folder
-###############################################################################
+SCP script to the /pbdata/packages/scripts folder
 
 scp the "monitor_interfaces.py" file located in the scripts folder to local
 workstation to be burned to cd.
 You will also need to scp the file to the Production DG when the time comes.
 
-###############################################################################
-###Create the "monitor_interfaces.log" file.
-###############################################################################
+Create the "monitor_interfaces.log" file
 
-This is automagically created when you issue the command below.
 
-###############################################################################
-###Check to make sure everything looks good.
-###############################################################################
 ```
 [root@dg0 scripts]# ls -alh
 total 128K
@@ -76,9 +64,9 @@ drwxr-xr-x 2 root root 3.8K Apr  5 12:57 old
 98
 [root@dg0 scripts]#
 ```
-###############################################################################
-###Start the "monitor_interfaces.py" script.
-###############################################################################
+
+Start the "monitor_interfaces.py" script
+
 ```
 [root@dg0 scripts]# pwd
 /pbdata/packages/scripts
@@ -94,9 +82,9 @@ drwxr-xr-x 2 root root 3.8K Apr  5 12:57 old
 [1] 2883
 [root@dg0 scripts]#
 ```
-###############################################################################
-###Tail the "monitor_interfaces.log" to monitor it's progress.
-###############################################################################
+
+Tail the "monitor_interfaces.log" to monitor it's progress
+
 ```
 [root@dg0 scripts]# tail -n 20 monitor_interfaces.log
 2019-04-05 16:41:08
@@ -120,9 +108,8 @@ Run completed at 2019-04-05 17:15:52
 300 seconds until the next run. Ctrl+c to quit
 Countdown until next run:  300 290 280 270 260 250 240 230 220 [root@dg0 scripts]#
 ```
-###############################################################################
-###To kill the PID of the script process use the following command
-###############################################################################
+
+To kill the PID of the script process:
 
 Find the PID of the script:
 ```
@@ -137,12 +124,7 @@ kill -SIGINT <PID>
 kill -SIGINT 2883
 ```
 
-
-
-###############################################################################
-Post Processing
-###############################################################################
-
+### Post Processing
 
 Copy the analyze_data.py, interface_stats.py files to your Python 2.7 environement.
 
